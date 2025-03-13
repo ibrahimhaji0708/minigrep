@@ -1,28 +1,5 @@
-use std::{env, fs, process,};
-use std::error::Error;
-
-struct Config {
-    query: String,
-    filename: String,
-}
-
-impl Config {
-    fn new(args: &[String]) -> Result<Config, &str> {
-        if args.len() < 3 {
-            return Err("not enough args");
-        }
-        let query = args[1].clone();
-        let filename = args[2].clone();
-
-        Ok(Config { query, filename })
-    }
-}
-
-fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(config.filename)?;
-    println!("with text:\n{}", contents);
-    Ok(())
-}
+use std::{env, process,};
+use minigrep::Config;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -35,7 +12,7 @@ fn main() {
     println!("searching for {}", config.query);
     println!("in file {}", config.filename);
 
-    if let Err(e) = run(config) {
+    if let Err(e) = minigrep::run(config) {
         println!("application error: {}", e);
         process::exit(1);
     }
