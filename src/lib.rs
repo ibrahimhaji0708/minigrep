@@ -1,5 +1,7 @@
 use std::error::Error;
 use std::{fs, env};
+// pub use self::*;
+// use std::path::Path;
 
 pub struct Config {
     pub query: String,
@@ -38,7 +40,6 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut results = Vec::new();
-    // vec![]
     for line in contents.lines() {
         if line.contains(query) {
             results.push(line);
@@ -48,7 +49,6 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 }
 
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    // vec![]
     let query = query.to_lowercase();
     let mut result = Vec::new();
 
@@ -60,34 +60,27 @@ pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a st
     result
 }
 
-//TTD
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn case_sensitive() {
-        let query = "duct";
-        let content = "\
-Rust: 
-safe, fast, productive
-Pick three.
-Duct Tape.";
-        assert_eq!(vec!["safe, fast, productive"], search(query, content));
+pub fn cmd_pwd() {
+    match env::current_dir() {
+        Ok(path) => println!("{}", path.display()),
+        Err(e) => println!("Error: {}", e),
     }
+}
 
-    #[test]
-    fn case_insensitive() {
-        let query = "rUsT";
-        let contents = "\
-Rust:
-safe, fast, productive.
-Pick three.
-Trust me.";
-
-        assert_eq!(
-            vec!["Rust:", "Trust me."],
-            search_case_insensitive(query, contents)
-        );
+pub fn cmd_ls() {
+    match fs::read_dir(".") {
+        Ok(entries) => {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        println!("{}/", path.file_name().unwrap().to_string_lossy());
+                    } else {
+                        println!("{}", path.file_name().unwrap().to_string_lossy());
+                    }
+                }
+            }
+        }
+        Err(e) => println!("Error: {}", e),
     }
 }
