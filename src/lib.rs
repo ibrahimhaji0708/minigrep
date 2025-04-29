@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::fs::File;
 use std::{fs, env};
 // pub use self::*;
 // use std::path::Path;
@@ -82,5 +83,21 @@ pub fn cmd_ls() {
             }
         }
         Err(e) => println!("Error: {}", e),
+    }
+}
+
+//touch cmd
+pub fn cmd_touch(filename: &str) {
+    match File::create(filename) {
+        Ok(_) => println!("File '{}' created.", filename),
+        Err(e) => println!("Failed to create file '{}': {}", filename, e),
+    }
+}
+
+//cat cmd
+pub fn cmd_cat(filename: &str) {
+    match fs::read_to_string(filename) {
+        Ok(contents) => println!("{}", contents),
+        Err(e) => println!("Error reading file '{}': {}", filename, e),
     }
 }

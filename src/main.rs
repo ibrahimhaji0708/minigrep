@@ -1,7 +1,11 @@
-use std::{env, process, io::{self, Write}};
-use minigrep::{Config, cmd_pwd, cmd_ls};
+use minigrep::{cmd_cat, cmd_ls, cmd_pwd, cmd_touch, Config};
+use std::{
+    env,
+    io::{self, Write},
+    process,
+};
 
-fn cli_loop() {  // <-- move cli_loop above
+fn cli_loop() {
     loop {
         print!("> ");
         io::stdout().flush().unwrap();
@@ -12,21 +16,41 @@ fn cli_loop() {  // <-- move cli_loop above
             continue;
         }
 
-        let command = input.trim();
-        match command {
+        let input = input.trim();
+        let parts: Vec<&str> = input.split_whitespace().collect();
+        if parts.is_empty() {
+            continue;
+        }
+
+        match parts[0] {
+            //exit cmd
             "exit" | "quit" => {
                 println!("Goodbye!");
                 break;
-            },
-            "pwd" => {
-                cmd_pwd(); // <-- no need minigrep::cmd_pwd()
-            },
-            "ls" => {
-                cmd_ls(); // <-- same here
-            },
-            _ => {
-                println!("Unknown command: {}", command);
             }
+            //pwd cmd
+            "pwd" => cmd_pwd(),
+
+            //ls cmd
+            "ls" => cmd_ls(),
+
+            //touch cmd
+            "touch" => {
+                if parts.len() < 2 {
+                    println!("Usage: touch <filename>");
+                } else {
+                    cmd_touch(parts[1]);
+                }
+            }
+            //cat cmd
+            "cat" => {
+                if parts.len() < 2 {
+                    println!("Usage: cat <filename>");
+                } else {
+                    cmd_cat(parts[1]);
+                }
+            }
+            _ => println!("Unknown command: {}", input),
         }
     }
 }
@@ -49,6 +73,6 @@ fn main() {
         }
     } else {
         println!("Welcome to minigrep CLI!..");
-        cli_loop();  // now no error
+        cli_loop();
     }
 }
