@@ -50,6 +50,35 @@ fn cli_loop() {
                     cmd_cat(parts[1]);
                 }
             }
+
+            //mkdir cmd 
+            cmd if cmd.starts_with("mkdir ") => {
+                let parts: Vec<&str> = cmd.splitn(2, ' ').collect();
+                if parts.len() == 2 {
+                    minigrep::cmd_mkdir(parts[1]);
+                } else {
+                    println!("Usage: mkdir <directory_name>");
+                }
+            },
+            //rm cmd
+            cmd if cmd.starts_with("rm ") => {
+                let parts: Vec<&str> = cmd.splitn(2, ' ').collect();
+                if parts.len() == 2 {
+                    minigrep::cmd_rm(parts[1]);
+                } else {
+                    println!("Usage: rm <file_or_dir>");
+                }
+            },
+            //cd cmd
+            cmd if cmd.starts_with("cd ") => {
+                let parts: Vec<&str> = cmd.splitn(2, ' ').collect();
+                if parts.len() == 2 {
+                    minigrep::cmd_cd(parts[1]);
+                } else {
+                    println!("Usage: cd <directory>");
+                }
+            },
+            //error handling
             _ => println!("Unknown command: {}", input),
         }
     }

@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::fs::File;
+use std::path::Path;
 use std::{fs, env};
 // pub use self::*;
 // use std::path::Path;
@@ -99,5 +100,38 @@ pub fn cmd_cat(filename: &str) {
     match fs::read_to_string(filename) {
         Ok(contents) => println!("{}", contents),
         Err(e) => println!("Error reading file '{}': {}", filename, e),
+    }
+}
+
+//mkdir cmd
+pub fn cmd_mkdir(name: &str) {
+    match fs::create_dir(name) {
+        Ok(_) => println!("Directory '{}' created.", name),
+        Err(e) => println!("Failed to create directory: {}", e),
+    }
+}
+
+//rm cmd
+pub fn cmd_rm(target: &str) {
+    let path = Path::new(target);
+    if path.is_dir() {
+        match fs::remove_dir_all(path) {
+            Ok(_) => println!("Directory '{}' removed.", target),
+            Err(e) => println!("Error removing directory: {}", e),
+        }
+    } else if path.is_file() {
+        match fs::remove_file(path) {
+            Ok(_) => println!("File '{}' removed.", target),
+            Err(e) => println!("Error removing file: {}", e),
+        }
+    } else {
+        println!("No such file or directory: '{}'", target);
+    }
+}
+
+//cd cmd
+pub fn cmd_cd(path: &str) {
+    if let Err(e) = env::set_current_dir(path) {
+        println!("Failed to change directory: {}", e);
     }
 }
