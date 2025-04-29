@@ -1,21 +1,20 @@
 use std::error::Error;
 use std::fs::File;
 use std::path::Path;
-use std::{fs, env};
-// pub use self::*;
-// use std::path::Path;
+use std::{env, fs};
 
 pub struct Config {
     pub query: String,
     pub filename: String,
-    pub case_sensitive: bool, 
+    pub case_sensitive: bool,
 }
 
 impl Config {
     pub fn new(args: &[String]) -> Result<Config, &str> {
         if args.len() < 3 {
-            return Err("not enough args");
+            return Err("not enough arguments");
         }
+        
         let query = args[1].clone();
         let filename = args[2].clone();
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
@@ -25,7 +24,7 @@ impl Config {
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(config.filename)?;
+    let contents = fs::read_to_string(&config.filename)?;
 
     let results = if config.case_sensitive {
         search(&config.query, &contents)
@@ -42,24 +41,27 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut results = Vec::new();
+    
     for line in contents.lines() {
         if line.contains(query) {
             results.push(line);
         }
     }
+    
     results
 }
 
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let query = query.to_lowercase();
-    let mut result = Vec::new();
+    let mut results = Vec::new();
 
     for line in contents.lines() {
         if line.to_lowercase().contains(&query) {
-            result.push(line);
+            results.push(line);
         }
     }
-    result
+    
+    results
 }
 
 pub fn cmd_pwd() {
@@ -87,7 +89,6 @@ pub fn cmd_ls() {
     }
 }
 
-//touch cmd
 pub fn cmd_touch(filename: &str) {
     match File::create(filename) {
         Ok(_) => println!("File '{}' created.", filename),
@@ -95,7 +96,6 @@ pub fn cmd_touch(filename: &str) {
     }
 }
 
-//cat cmd
 pub fn cmd_cat(filename: &str) {
     match fs::read_to_string(filename) {
         Ok(contents) => println!("{}", contents),
@@ -103,35 +103,34 @@ pub fn cmd_cat(filename: &str) {
     }
 }
 
-//mkdir cmd
 pub fn cmd_mkdir(name: &str) {
     match fs::create_dir(name) {
         Ok(_) => println!("Directory '{}' created.", name),
-        Err(e) => println!("Failed to create directory: {}", e),
+        Err(e) => println!("Failed to create directory '{}': {}", name, e),
     }
 }
 
-//rm cmd
 pub fn cmd_rm(target: &str) {
     let path = Path::new(target);
+    
     if path.is_dir() {
         match fs::remove_dir_all(path) {
             Ok(_) => println!("Directory '{}' removed.", target),
-            Err(e) => println!("Error removing directory: {}", e),
+            Err(e) => println!("Error removing directory '{}': {}", target, e),
         }
     } else if path.is_file() {
         match fs::remove_file(path) {
             Ok(_) => println!("File '{}' removed.", target),
-            Err(e) => println!("Error removing file: {}", e),
+            Err(e) => println!("Error removing file '{}': {}", target, e),
         }
     } else {
         println!("No such file or directory: '{}'", target);
     }
 }
 
-//cd cmd
 pub fn cmd_cd(path: &str) {
-    if let Err(e) = env::set_current_dir(path) {
-        println!("Failed to change directory: {}", e);
+    match env::set_current_dir(path) {
+        Ok(_) => (),
+        Err(e) => println!("Failed to change directory to '{}': {}", path, e),
     }
 }

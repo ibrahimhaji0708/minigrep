@@ -1,4 +1,4 @@
-use minigrep::{cmd_cat, cmd_ls, cmd_pwd, cmd_touch, Config};
+use minigrep::{cmd_cat, cmd_cd, cmd_ls, cmd_mkdir, cmd_pwd, cmd_rm, cmd_touch, Config};
 use std::{
     env,
     io::{self, Write},
@@ -9,32 +9,31 @@ fn cli_loop() {
     loop {
         print!("> ");
         io::stdout().flush().unwrap();
-
+        
         let mut input = String::new();
-        if let Err(_) = io::stdin().read_line(&mut input) {
+        if io::stdin().read_line(&mut input).is_err() {
             println!("Failed to read input.");
             continue;
         }
-
+        
         let input = input.trim();
         let parts: Vec<&str> = input.split_whitespace().collect();
+        
         if parts.is_empty() {
             continue;
         }
-
+        
         match parts[0] {
-            //exit cmd
+            // Exit commands
             "exit" | "quit" => {
                 println!("Goodbye!");
                 break;
             }
-            //pwd cmd
+            // PWD command
             "pwd" => cmd_pwd(),
-
-            //ls cmd
+            // LS command
             "ls" => cmd_ls(),
-
-            //touch cmd
+            // Touch command
             "touch" => {
                 if parts.len() < 2 {
                     println!("Usage: touch <filename>");
@@ -42,7 +41,7 @@ fn cli_loop() {
                     cmd_touch(parts[1]);
                 }
             }
-            //cat cmd
+            // Cat command
             "cat" => {
                 if parts.len() < 2 {
                     println!("Usage: cat <filename>");
@@ -50,58 +49,56 @@ fn cli_loop() {
                     cmd_cat(parts[1]);
                 }
             }
-
-            //mkdir cmd 
-            cmd if cmd.starts_with("mkdir ") => {
-                let parts: Vec<&str> = cmd.splitn(2, ' ').collect();
-                if parts.len() == 2 {
-                    minigrep::cmd_mkdir(parts[1]);
-                } else {
+            // Mkdir command
+            "mkdir" => {
+                if parts.len() < 2 {
                     println!("Usage: mkdir <directory_name>");
-                }
-            },
-            //rm cmd
-            cmd if cmd.starts_with("rm ") => {
-                let parts: Vec<&str> = cmd.splitn(2, ' ').collect();
-                if parts.len() == 2 {
-                    minigrep::cmd_rm(parts[1]);
                 } else {
+                    cmd_mkdir(parts[1]);
+                }
+            }
+            // Rm command
+            "rm" => {
+                if parts.len() < 2 {
                     println!("Usage: rm <file_or_dir>");
-                }
-            },
-            //cd cmd
-            cmd if cmd.starts_with("cd ") => {
-                let parts: Vec<&str> = cmd.splitn(2, ' ').collect();
-                if parts.len() == 2 {
-                    minigrep::cmd_cd(parts[1]);
                 } else {
-                    println!("Usage: cd <directory>");
+                    cmd_rm(parts[1]);
                 }
-            },
-            //error handling
-            _ => println!("Unknown command: {}", input),
+            }
+            // CD command
+            "cd" => {
+                if parts.len() < 2 {
+                    println!("Usage: cd <directory>");
+                } else {
+                    cmd_cd(parts[1]);
+                }
+            }
+            // Unknown command
+            _ => println!("Unknown command: {}", parts[0]),
         }
     }
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-
+    
     if args.len() > 1 {
+        // File search mode
         let config = Config::new(&args).unwrap_or_else(|err| {
-            eprintln!("problem parsing args: {}", err);
+            eprintln!("Problem parsing arguments: {}", err);
             process::exit(1);
         });
-
+        
         println!("Searching for: {}", config.query);
         println!("In file: {}", config.filename);
-
+        
         if let Err(e) = minigrep::run(config) {
-            eprintln!("app error: {}", e);
+            eprintln!("Application error: {}", e);
             process::exit(1);
         }
     } else {
-        println!("Welcome to minigrep CLI!..");
+        // Interactive CLI mode
+        println!("Welcome to minigrep CLI!");
         cli_loop();
     }
 }
