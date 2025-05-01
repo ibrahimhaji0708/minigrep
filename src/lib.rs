@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::fs::File;
+use std::fs::{read_to_string, File};
 use std::path::Path;
 use std::{env, fs};
 
@@ -7,6 +7,7 @@ pub struct Config {
     pub query: String,
     pub filename: String,
     pub case_sensitive: bool,
+    pub recursive: bool,
 }
 
 impl Config {
@@ -14,28 +15,61 @@ impl Config {
         if args.len() < 3 {
             return Err("not enough arguments");
         }
-        
-        let query = args[1].clone();
-        let filename = args[2].clone();
+
+        let recursive = args.get(1).map(|s| s == "-r").unwrap_or(false);
+        let (query, filename) = if recursive {
+            (args[2].clone(), args[3].clone())
+        } else {
+            (args[1].clone(), args[2].clone())
+        };
+
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
 
-        Ok(Config { query, filename, case_sensitive })
+        Ok(Config { query, filename, case_sensitive, recursive })
     }
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(&config.filename)?;
-
-    let results = if config.case_sensitive {
-        search(&config.query, &contents)
+    if config.recursive {
+        recursive_search(&config.query, &config.filename, config.case_sensitive)?;
     } else {
-        search_case_insensitive(&config.query, &contents)
-    };
+        let contents = read_to_string(&config.filename)?;
+        let results = if config.case_sensitive {
+            search(&config.query, &contents)
+        } else {
+            search_case_insensitive(&config.query, &contents)
+        };
 
-    for line in results {
-        println!("{}", line);
+        for line in results {
+            println!("{}", line);
+        }
     }
-
+    Ok(())
+}
+fn recursive_search(query: &str, dir: &str, case_sensitive: bool) -> Result<(), Box<dyn Error>> {
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            recursive_search(query, &path.to_string_lossy(), case_sensitive)?;
+        } else if path.is_file() {
+            let content = fs::read_to_string(&path);
+            if let Ok(content) = content {
+                let results = if case_sensitive {
+                    search(query, &content)
+                } else {
+                    search_case_insensitive(query, &content)
+                };
+                if !results.is_empty() {
+                    println!("{}:", path.display());
+                    for line in results {
+                        println!("{}", line);
+                    }
+                    println!();
+                }
+            }
+        }
+    }
     Ok(())
 }
 

@@ -91,6 +91,20 @@ fn cli_loop() {
                     cmd_cd(parts[1]);
                 }
             }
+            //vim /nano
+            "vim" | "nano" => {
+                if parts.len() < 2 {
+                    println!("Usage: {} <filename>", parts[0]);
+                } else {
+                    let editor = parts[0];
+                    let filename = parts[1];
+                    match std::process::Command::new(editor).arg(filename).status() {
+                        Ok(status) if status.success() => {}
+                        Ok(status) => println!("Editor exited with status: {}", status),
+                        Err(e) => println!("Failed to launch editor: {}", e),
+                    }
+                }
+            }
             _ => println!("Unknown command: {}", parts[0]),
         }
     }
